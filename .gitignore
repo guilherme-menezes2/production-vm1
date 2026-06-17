@@ -1,0 +1,51 @@
+# Ambiente e segredos
+.env
+.env.*
+!.env.example
+
+# Dados persistentes de producao
+data/*
+!data/
+!data/.gitkeep
+
+# Backups, dumps e restores
+backups/
+restore/
+restore-test/
+*.dump
+*.backup
+*.sql.gz
+*.tar
+*.tar.gz
+*.tgz
+*.zip
+
+# Logs
+logs/
+*.log
+nginx/logs/*
+
+# Certificados, chaves e credenciais
+*.pem
+*.key
+*.crt
+*.csr
+*.p12
+*.pfx
+id_ed25519*
+id_rsa*
+authorized_keys
+known_hosts
+
+# Artefatos locais do sistema/editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Dependencias/builds caso o portal seja versionado neste repo
+node_modules/
+dist/
+build/
+__pycache__/
+*.pyc

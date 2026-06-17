@@ -1,0 +1,156 @@
+name: hotspot-academia-vm1
+
+# VM1: servicos de tempo real do hotspot.
+# PostgreSQL fica somente aqui. A VM2 nao participa da autenticacao.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      TZ: ${TZ:-America/Fortaleza}
+      POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB nao definido}
+      POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER nao definido}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD nao definido}
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+    networks:
+      - backend
+
+  portal:
+    build:
+      context: ./portal
+    restart: unless-stopped
+    environment:
+      TZ: ${TZ:-America/Fortaleza}
+      DATABASE_URL: ${DATABASE_URL:?DATABASE_URL nao definido}
+      PORTAL_BASE_URL: https://${PORTAL_DOMAIN:?PORTAL_DOMAIN nao definido}
+      PORTAL_BRAND_NAME: ${PORTAL_BRAND_NAME:-Wi-Fi Academia}
+      PORTAL_BRAND_TAGLINE: ${PORTAL_BRAND_TAGLINE:-Acesso Wi-Fi para alunos e visitantes autorizados.}
+      PORTAL_SHOW_RADIUS_PASSWORD: ${PORTAL_SHOW_RADIUS_PASSWORD:-false}
+      PORTAL_UPLOAD_DIR: /app/data/uploads
+      PORTAL_MAX_IMAGE_BYTES: ${PORTAL_MAX_IMAGE_BYTES:-2097152}
+      PORTAL_SESSION_SECRET: ${PORTAL_SESSION_SECRET:?PORTAL_SESSION_SECRET nao definido}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:?ADMIN_EMAIL nao definido}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?ADMIN_PASSWORD nao definido}
+      PORTAL_TERMO_VERSAO: ${PORTAL_TERMO_VERSAO:-prod-1}
+      PORTAL_RADIUS_RATE_LIMIT: ${PORTAL_RADIUS_RATE_LIMIT:-10M/5M}
+      PORTAL_DEFAULT_CLIENTE_NOME: ${PORTAL_DEFAULT_CLIENTE_NOME:-Cliente Academia}
+      PORTAL_DEFAULT_CLIENTE_DOCUMENTO: ${PORTAL_DEFAULT_CLIENTE_DOCUMENTO:-CHANGE_ME_DOCUMENTO}
+      PORTAL_DEFAULT_UNIDADE_NOME: ${PORTAL_DEFAULT_UNIDADE_NOME:-Unidade Principal}
+      PORTAL_DEFAULT_UNIDADE_IDENTIFICADOR: ${PORTAL_DEFAULT_UNIDADE_IDENTIFICADOR:-unidade-principal}
+    volumes:
+      - ./data/portal:/app/data
+    networks:
+      - backend
+    depends_on:
+      - postgres
+
+  freeradius:
+    image: freeradius/freeradius-server:latest
+    restart: unless-stopped
+    entrypoint:
+      - /bin/sh
+      - /opt/hotspot-radius/production-entrypoint.sh
+    command:
+      - -f
+      - -l
+      - /var/log/radius/radius.log
+    environment:
+      TZ: ${TZ:-America/Fortaleza}
+      RADIUS_SECRET: ${RADIUS_SECRET:?RADIUS_SECRET nao definido}
+      RADIUS_CLIENT_IP: ${CCR_IP:?CCR_IP nao definido}
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB nao definido}
+      POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER nao definido}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD nao definido}
+    ports:
+      - "${VM1_PUBLIC_IP:-0.0.0.0}:1812:1812/udp"
+      - "${VM1_PUBLIC_IP:-0.0.0.0}:1813:1813/udp"
+    volumes:
+      - ./freeradius/production-entrypoint.sh:/opt/hotspot-radius/production-entrypoint.sh:ro
+      - ./data/freeradius/state:/data
+      - ./data/freeradius/logs:/var/log/radius
+    networks:
+      - backend
+      - radius_net
+    depends_on:
+      - postgres
+
+  nginx:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    environment:
+      TZ: ${TZ:-America/Fortaleza}
+    ports:
+      - "${VM1_PUBLIC_IP:-0.0.0.0}:80:80"
+      - "${VM1_PUBLIC_IP:-0.0.0.0}:443:443"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./data/nginx/logs:/var/log/nginx
+      - ./data/nginx/certs:/etc/nginx/certs:ro
+      - ./data/nginx/acme:/var/www/certbot
+    networks:
+      - frontend
+      - backend
+    depends_on:
+      - portal
+
+  rsyslog:
+    build:
+      context: ./rsyslog
+    restart: unless-stopped
+    environment:
+      TZ: ${TZ:-America/Fortaleza}
+    ports:
+      - "${VM1_PUBLIC_IP:-0.0.0.0}:514:514/udp"
+    volumes:
+      - ./data/rsyslog:/var/log/remote
+    networks:
+      - logs_net
+
+  backup-client:
+    build:
+      context: ./backup-client
+    restart: unless-stopped
+    environment:
+      TZ: ${TZ:-America/Fortaleza}
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB nao definido}
+      POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER nao definido}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD nao definido}
+      BACKUP_VM2_HOST: ${BACKUP_VM2_HOST:?BACKUP_VM2_HOST nao definido}
+      BACKUP_VM2_PORT: ${BACKUP_VM2_PORT:?BACKUP_VM2_PORT nao definido}
+      BACKUP_VM2_USER: ${BACKUP_VM2_USER:?BACKUP_VM2_USER nao definido}
+      RESTIC_REPOSITORY: ${BACKUP_REPOSITORY:?BACKUP_REPOSITORY nao definido}
+      RESTIC_PASSWORD: ${RESTIC_PASSWORD:?RESTIC_PASSWORD nao definido}
+      RESTIC_KEEP_DAILY: ${RESTIC_KEEP_DAILY:-7}
+      RESTIC_KEEP_WEEKLY: ${RESTIC_KEEP_WEEKLY:-4}
+      RESTIC_KEEP_MONTHLY: ${RESTIC_KEEP_MONTHLY:-12}
+    command: ["tail", "-f", "/dev/null"]
+    volumes:
+      - ./data/backups:/backups
+      - ./data/backups/ssh:/root/.ssh:ro
+      - ./data/portal:/source/portal-data:ro
+      - ./data/rsyslog:/source/rsyslog:ro
+      - ./nginx:/source/configs/nginx:ro
+      - ./freeradius:/source/configs/freeradius:ro
+      - ./postgres:/source/configs/postgres:ro
+      - ./rsyslog:/source/configs/rsyslog:ro
+      - ./portal:/source/configs/portal:ro
+      - ./backup-client:/source/configs/backup-client:ro
+      - ./scripts:/source/configs/scripts:ro
+      - ./docker-compose.yml:/source/configs/root/docker-compose.yml:ro
+      - ./.env.example:/source/configs/root/.env.example:ro
+    networks:
+      - backend
+    depends_on:
+      - postgres
+
+networks:
+  frontend:
+  backend:
+  radius_net:
+  logs_net:
