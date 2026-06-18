@@ -17,10 +17,10 @@ O PostgreSQL principal fica somente nesta VM e nao e publicado em porta do host.
 
 Este diretorio foi preparado para ser usado como um repositorio GitHub independente da VM1.
 
-Antes de publicar o repo da VM1, confirme que ele contem tudo que o compose precisa para buildar em producao:
+Antes de publicar ou atualizar o repo da VM1, confirme que ele contem tudo que o compose precisa para buildar em producao:
 
-- codigo buildavel do portal em `portal/`;
-- migrations em `postgres/migrations/`, ou processo de release que as copie para la;
+- codigo buildavel do portal em `portal/`, incluindo `portal/Dockerfile`;
+- migrations em `postgres/migrations/`;
 - configuracoes de `nginx/`, `freeradius/`, `rsyslog/` e `backup-client/`.
 
 No servidor:
@@ -55,6 +55,8 @@ Variaveis principais:
 ```sh
 ./scripts/start.sh
 ```
+
+Se o build falhar com `failed to read dockerfile: open Dockerfile: no such file or directory`, o repositorio da VM1 foi publicado sem o conteudo buildavel de `portal/`. Atualize o repo incluindo `portal/Dockerfile`, `portal/app.py`, `portal/requirements.txt` e `portal/static/`.
 
 ```sh
 ./scripts/status.sh
