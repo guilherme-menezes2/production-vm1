@@ -42,7 +42,13 @@ included=/source/rsyslog
 included=/source/portal-data
 EOF
 
-if ! restic snapshots >/dev/null 2>&1; then
+if restic snapshots >/dev/null 2>&1; then
+  :
+elif restic cat config >/dev/null 2>&1; then
+  echo "Repositorio restic ja existe, mas nao foi possivel listar snapshots." >&2
+  echo "Verifique se RESTIC_PASSWORD no .env da VM1 e a mesma senha usada no 'restic init'." >&2
+  exit 1
+else
   echo "Inicializando repositorio restic..."
   restic init
 fi
