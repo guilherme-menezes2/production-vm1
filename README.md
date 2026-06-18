@@ -73,6 +73,19 @@ Para ver logs de um servico especifico:
 ./scripts/logs.sh portal
 ```
 
+## Nginx E HTTPS
+
+O arquivo ativo `nginx/default.conf` sobe o portal em HTTP para o deploy inicial e para permitir `curl http://127.0.0.1/health`.
+
+Depois de instalar certificados reais em `data/nginx/certs/fullchain.pem` e `data/nginx/certs/privkey.pem`, voce pode ativar HTTPS copiando o template:
+
+```sh
+cp nginx/https.conf.example nginx/default.conf
+./scripts/start.sh
+```
+
+Nao ative o template HTTPS antes dos certificados existirem; o container Nginx ficara reiniciando.
+
 ## Banco
 
 Aplicar migrations:
