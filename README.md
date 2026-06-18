@@ -108,6 +108,13 @@ Verificar se o FreeRADIUS esta em execucao:
 ./scripts/check-radius.sh
 ```
 
+Criar usuario RADIUS de teste e validar `Access-Accept` sem imprimir o secret:
+
+```sh
+./scripts/radius-test-prod-user.sh
+./scripts/radius-test.sh
+```
+
 As portas UDP `1812` e `1813` sao publicadas para a CCR/NAS. Em firewall de host, security group ou borda, restrinja essas portas somente ao `CCR_IP`.
 
 Exemplo conceitual:

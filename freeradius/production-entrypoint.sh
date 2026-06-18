@@ -21,6 +21,20 @@ fi
 mkdir -p "$RADIUS_CONF_DIR/mods-available" "$RADIUS_CONF_DIR/mods-enabled" /var/log/radius
 
 cat > "$RADIUS_CONF_DIR/clients.conf" <<EOF
+client localhost_ipv4 {
+  ipaddr = 127.0.0.1
+  secret = ${RADIUS_SECRET}
+  require_message_authenticator = no
+  proto = *
+}
+
+client localhost_ipv6 {
+  ipv6addr = ::1
+  secret = ${RADIUS_SECRET}
+  require_message_authenticator = no
+  proto = *
+}
+
 client mikrotik_production {
   ipaddr = ${RADIUS_CLIENT_IP}
   secret = ${RADIUS_SECRET}
