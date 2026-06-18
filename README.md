@@ -45,7 +45,8 @@ chmod +x scripts/*.sh
 Variaveis principais:
 
 - `PORTAL_DOMAIN`: dominio publico do portal, usado pelo Nginx e pelo Portal.
-- `VM1_PUBLIC_IP`: IP onde Nginx, FreeRADIUS e rsyslog ficarao publicados.
+- `VM1_PUBLIC_IP`: IP publico ou privado usado em documentacao, firewall e testes entre VMs.
+- `VM1_BIND_IP`: IP onde Docker publica Nginx, FreeRADIUS e rsyslog. Use `0.0.0.0` para permitir testes via `127.0.0.1` no host.
 - `CCR_IP`: IP da CCR1036/NAS autorizado no FreeRADIUS.
 - `BACKUP_REPOSITORY`: repositorio restic remoto na VM2.
 - `RESTIC_PASSWORD`: senha de criptografia do backup.
@@ -176,6 +177,8 @@ Testar HTTP localmente na VM:
 ```sh
 curl -I http://127.0.0.1/health
 ```
+
+Se `127.0.0.1` nao responder, confira se `VM1_BIND_IP=0.0.0.0` no `.env` e recrie os containers com `./scripts/start.sh`.
 
 ## Seguranca
 
