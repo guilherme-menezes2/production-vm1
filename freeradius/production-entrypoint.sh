@@ -25,6 +25,7 @@ client localhost_ipv4 {
   ipaddr = 127.0.0.1
   secret = ${RADIUS_SECRET}
   require_message_authenticator = no
+  limit_proxy_state = no
   proto = *
 }
 
@@ -32,6 +33,7 @@ client localhost_ipv6 {
   ipv6addr = ::1
   secret = ${RADIUS_SECRET}
   require_message_authenticator = no
+  limit_proxy_state = no
   proto = *
 }
 
@@ -39,6 +41,7 @@ client mikrotik_production {
   ipaddr = ${RADIUS_CLIENT_IP}
   secret = ${RADIUS_SECRET}
   require_message_authenticator = no
+  limit_proxy_state = no
   proto = *
 }
 EOF
