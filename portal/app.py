@@ -1580,7 +1580,7 @@ def cadastro():
   <script>
     window.setTimeout(function () {{
       window.location.replace({login_url_js});
-    }}, 600);
+    }}, 50);
   </script>
 </main>
 """
