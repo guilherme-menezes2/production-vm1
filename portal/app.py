@@ -886,10 +886,11 @@ def ensure_radius_credentials(cur, username_radius):
     return password
 
 
-def simulation_link(link_login, link_orig, username_radius):
+def simulation_link(link_login, link_orig, username_radius, password):
     target = link_login or f"{PORTAL_BASE_URL.rstrip('/')}/login-simulado"
     params = {
         "username": username_radius,
+        "password": password,
     }
     if link_orig:
         params["dst"] = link_orig
@@ -1549,7 +1550,7 @@ def cadastro():
 """
         return html_page("Erro no cadastro", body), 500
 
-    login_url = simulation_link(link_login, link_orig, usuario["username_radius"])
+    login_url = simulation_link(link_login, link_orig, usuario["username_radius"], password)
     status = "criado" if criado else "reutilizado"
     debug_credentials = ""
     if PORTAL_SHOW_RADIUS_PASSWORD:
