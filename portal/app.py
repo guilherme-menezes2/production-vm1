@@ -4,6 +4,7 @@ import secrets
 import string
 import csv
 import hmac
+import json
 from pathlib import Path
 from functools import wraps
 from io import StringIO
@@ -1565,16 +1566,22 @@ def cadastro():
         <p>A senha aparece na tela apenas para debug local. Remover isso em producao.</p>
       </div>
 """
+    login_url_js = json.dumps(login_url)
     body = f"""
 <main class="message-shell">
   <section class="message-card message-card--success">
     <span class="message-icon">OK</span>
     <p class="eyebrow">Usuario {escape(status)}</p>
     <h1>Acesso liberado</h1>
-    <p>Seu cadastro foi concluido e o acesso Wi-Fi esta sendo liberado.</p>
+    <p>Seu cadastro foi concluido. Estamos conectando seu dispositivo ao Wi-Fi automaticamente.</p>
     <a class="btn btn--primary btn--wide" href="{escape(login_url)}">Continuar para o Wi-Fi</a>
     {debug_credentials}
   </section>
+  <script>
+    window.setTimeout(function () {{
+      window.location.replace({login_url_js});
+    }}, 600);
+  </script>
 </main>
 """
     return html_page("Cadastro concluido", body)
