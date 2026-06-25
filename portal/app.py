@@ -1367,6 +1367,18 @@ def render_login_page_content(page, assets, blocks, hotspot_params, preview_stat
     link_login = hotspot_params.get("link_login", "")
     link_orig = hotspot_params.get("link_orig", "")
     nas_ip = hotspot_params.get("nas_ip", "")
+    debug_panel = ""
+    if preview:
+        debug_panel = f"""
+    <details class="debug-panel" open>
+      <summary>Dados tecnicos do Hotspot local</summary>
+      <dl>
+        <div><dt>MAC</dt><dd><code>{escape(mac)}</code></dd></div>
+        <div><dt>IP</dt><dd><code>{escape(ip)}</code></dd></div>
+        <div><dt>NAS IP</dt><dd><code>{escape(nas_ip)}</code></dd></div>
+      </dl>
+    </details>
+"""
 
     return f"""
 <main class="public-shell" style="{color_style} {background_style}">
@@ -1412,15 +1424,7 @@ def render_login_page_content(page, assets, blocks, hotspot_params, preview_stat
   <button class="btn btn--primary btn--wide" type="submit">{escape(button_text)}</button>
 </form>
     <p class="privacy-note">{escape(privacy_text)}</p>
-
-    <details class="debug-panel"{" open" if preview else ""}>
-      <summary>Dados tecnicos do Hotspot local</summary>
-      <dl>
-        <div><dt>MAC</dt><dd><code>{escape(mac)}</code></dd></div>
-        <div><dt>IP</dt><dd><code>{escape(ip)}</code></dd></div>
-        <div><dt>NAS IP</dt><dd><code>{escape(nas_ip)}</code></dd></div>
-      </dl>
-    </details>
+    {debug_panel}
   </section>
 </main>
 """
